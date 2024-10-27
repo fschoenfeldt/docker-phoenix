@@ -3,16 +3,16 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/app",
-  "forwardPorts": [4000],
+  "forwardPorts": [1337],
   "shutdownAction": "stopCompose",
 
   "customizations": {
     "vscode": {
       "extensions": [
-        "jakebecker.elixir-ls",
         "phoenixframework.phoenix",
         "bradlc.vscode-tailwindcss",
-        "florinpatrascu.vscode-elixir-snippets"
+        "florinpatrascu.vscode-elixir-snippets",
+        "JakeBecker.elixir-ls"
       ],
       "settings": {
         "emmet.includeLanguages": {
