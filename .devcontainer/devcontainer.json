@@ -2,10 +2,11 @@
   "name": "Docker Phoenix",
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
-  "workspaceFolder": "/app",
-  "forwardPorts": [1337],
+  "workspaceFolder": "/home/vscode/app",
+  "forwardPorts": [
+    1337
+  ],
   "shutdownAction": "stopCompose",
-
   "customizations": {
     "vscode": {
       "extensions": [

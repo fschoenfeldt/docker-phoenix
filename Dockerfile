@@ -1,15 +1,43 @@
-FROM debian:bullseye-20220801-slim
+FROM debian:bullseye-20250113-slim
 
 # Build Args
 # ARG PHOENIX_VERSION=1.7.12
 # ARG NODE_VERSION=20.10.0
 
+# https://github.com/elixir-lsp/elixir-ls-devcontainer-example/blob/main/.devcontainer/Dockerfile#L9C1-L15C23
+# This Dockerfile adds a non-root user with sudo access. Use the "remoteUser"
+# property in devcontainer.json to use it. On Linux, the container user's GID/UIDs
+# will be updated to match your local UID/GID (when using the dockerFile property).
+# See https://aka.ms/vscode-remote/containers/non-root-user for details.
+ARG USERNAME=vscode
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
 # Dependencies
-RUN apt update \
-  && apt upgrade -y \
-  && apt install -y bash curl git build-essential inotify-tools unzip
+# including asdf plugin erlang dependencies -> https://github.com/asdf-vm/asdf-erlang?tab=readme-ov-file#debian-12-bookworm
+RUN apt-get update -qq && \
+  apt-get install -qq -y \
+  bash \
+  curl \
+  git \
+  dirmngr \
+  gpg \
+  gawk \
+  unzip \
+  build-essential \
+  autoconf \
+  libssl-dev \
+  libncurses5-dev \
+  m4 \
+  libssh-dev \
+  inotify-tools \
+  ca-certificates
 
 SHELL ["/bin/bash", "-lc"]
+
+RUN groupadd --gid $USER_GID $USERNAME 
+RUN useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME
+USER vscode
 
 # asdf
 # https://github.com/asdf-community/asdf-ubuntu/blob/master/Dockerfile
@@ -21,7 +49,7 @@ RUN git clone --depth 1 https://github.com/asdf-vm/asdf.git $HOME/.asdf && \
 RUN asdf --version
 
 # App Directory
-ENV APP_HOME /app
+ENV APP_HOME /home/$USERNAME/app
 RUN mkdir -p $APP_HOME
 WORKDIR $APP_HOME
 
@@ -32,9 +60,6 @@ COPY ./app/.tool-versions $APP_HOME/.tool-versions
 
 # Erlang
 RUN asdf plugin-add erlang
-# install asdf plugin erlang dependencies -> https://github.com/asdf-vm/asdf-erlang?tab=readme-ov-file#debian-12-bookworm
-RUN apt-get update -y && apt-get install -y build-essential autoconf m4 libncurses-dev xsltproc fop libxml2-utils libssh-dev \
-  && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 RUN asdf plugin-add elixir
 RUN asdf plugin-add nodejs
@@ -50,7 +75,7 @@ RUN asdf plugin-add pnpm
 RUN asdf install
 
 # allow direnv
-# RUN direnv allow
+CMD ["direnv", "allow"]
 
 ENV LANG C.UTF-8
 
@@ -61,6 +86,13 @@ RUN mix local.rebar --force
 
 # App Port
 EXPOSE 1337
+
+# SSL
+# RUN git config --global http.sslVerify false
+# RUN git config --global --unset http.https://partner.bdr.de.sslkey \
+#     && git config --global --unset http.https://partner.bdr.de.sslcert \
+#     && git config --global --unset http.sslcert \
+#     && git config --global --unset http.sslkey
 
 # Default Command
 CMD ["mix", "phx.server"]
